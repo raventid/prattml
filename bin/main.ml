@@ -66,6 +66,34 @@ let print_expr (parsed_expression: expr option) : unit =
   | None -> print_endline "No valid expression parsed."
   | Some expr -> print_endline (string_of_expr expr)
 
+let rec print_expr_tree_helper expr prefix is_last =
+  match expr with
+  | Num n ->
+      print_string prefix;
+      print_string (if is_last then "└── " else "├── ");
+      print_endline (string_of_int n)
+  | Op (left, op, right) ->
+      print_string prefix;
+      print_string (if is_last then "└── " else "├── ");
+      print_string (match op with
+                    | Add -> "+"
+                    | Sub -> "-"
+                    | Mul -> "*"
+                    | Div -> "/"
+                    | Pow -> "^");
+      print_endline "";
+      
+      let new_prefix = prefix ^ (if is_last then "    " else "│   ") in
+      print_expr_tree_helper left new_prefix false;
+      print_expr_tree_helper right new_prefix true
+
+let print_expr_tree (parsed_expression: expr option) : unit =
+  match parsed_expression with
+  | None -> print_endline "No valid expression parsed."
+  | Some expr -> 
+      print_endline "Expression Tree:";
+      print_expr_tree_helper expr "" true
+
 let example_tokens = [ TNum 1
     ; TOp Add
     ; TNum 2
@@ -103,4 +131,7 @@ let () =
   print_token_stream example_tokens;
 
   print_endline "\nParsed expression:";
-  print_expr (parse example_tokens)
+  print_expr (parse example_tokens);
+
+  print_endline "\nExpression Tree:";
+  print_expr_tree (parse example_tokens)
