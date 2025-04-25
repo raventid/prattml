@@ -37,8 +37,7 @@ and pratt_loop (precendence_limit : int) (expression : expr) (tokens : token lis
     else
       (* We shouldn't parse this op. *)
       (* Return what we have. *)
-      (* (Note our token list points at the op, *)
-      (* not at the token after.) *)
+      (* (Note our token list points at the op, not at the token after.) *)
       Some (expression, tokens)
    | _ -> 
       (* Either we ran out of tokens or found something *)
