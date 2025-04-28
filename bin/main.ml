@@ -2,6 +2,7 @@ type binop = Add | Sub | Mul | Div | Pow
 
 type token = TNum of int | TOp of binop
 
+(* higher precedence binds stronger *)
 let precedence = function
 | Add | Sub -> 1
 | Mul | Div -> 2
