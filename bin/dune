@@ -1,4 +1,6 @@
 (executable
  (public_name prattml)
  (name main)
- (libraries prattml))
+ (libraries prattml)
+ (flags
+  (:standard -warn-error -A)))

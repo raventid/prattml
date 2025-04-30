@@ -1,6 +1,6 @@
 type binop = Add | Sub | Mul | Div | Pow
 
-type token = TNum of int | TOp of binop
+type token = TNum of int | TOp of binop | TLeftParen | TRightParen
 
 (* higher precedence binds stronger *)
 let precedence = function
@@ -14,12 +14,20 @@ let is_right_associative = function
 
 type expr = Num of int | Op of expr * binop * expr
 
-let prefix (tokens : token list) : (expr * token list) option = match tokens with
+let rec prefix (tokens : token list) : (expr * token list) option = match tokens with
   [] -> None
 | TNum n :: rest -> Some (Num n, rest)
-|  _ -> None
+| TOp Sub :: TNum n :: rest -> Some (Num (-n), rest) (* Unary negation, but grammar is not OK, what if `----4`? *)
+| TLeftParen :: rest -> grouping_expression rest
+| TRightParen :: _rest -> None (* Does not make any sense on it's own, so parsed as a grouping operator *)
+|  _ -> None  (* Something malformed in input *)
 
-let rec pratt (precedence_limit : int) (tokens : token list) : (expr * token list) option = match prefix tokens with
+and grouping_expression (tokens : token list) : (expr * token list) option =   match pratt 0 tokens with
+  | None -> None
+      | Some (expr, TRightParen :: tokens_after_right_paren) -> Some (expr, tokens_after_right_paren)
+      | Some (_expr, _tokens_missing_right_paren) -> None (* We are missing a right paren, so we are just stopping the parser *)
+
+and pratt (precedence_limit : int) (tokens : token list) : (expr * token list) option = match prefix tokens with
   None -> None
 | Some (left_expr, tokens_after_prefix) -> pratt_loop precedence_limit left_expr tokens_after_prefix
 
@@ -139,7 +147,23 @@ let example_tokens2 = [ TNum 1
     ; TNum 5
     ; TOp Div
     ; TNum 6
-    ]
+]
+
+let example_tokens3 = [ TNum 1
+    ; TOp Add
+    ; TLeftParen
+    ; TOp Sub
+    ; TNum 2
+    ; TOp Sub
+    ; TNum 3
+    ; TRightParen
+    ; TOp Mul
+    ; TNum 4
+    ; TOp Add
+    ; TNum 5
+    ; TOp Div
+    ; TNum 6
+]
 
 let string_of_binop = function
   | Add -> "Add"
@@ -151,6 +175,8 @@ let string_of_binop = function
 let string_of_token = function
   | TNum n -> "TNum " ^ string_of_int n
   | TOp op -> "TOp " ^ string_of_binop op
+  | TLeftParen -> "TLeftParen"
+  | TRightParen -> "TRightParen"
 
 let print_token_stream token_stream = List.iter (fun token -> print_endline (string_of_token token)) token_stream 
 
@@ -169,3 +195,9 @@ let () =
 
   print_endline "\nParsed expression:";
   print_expr (parse example_tokens2);
+
+  print_endline "\nThird example token stream:";
+  print_token_stream example_tokens3;
+
+  print_endline "\nParsed expression:";
+  print_expr (parse example_tokens3);
