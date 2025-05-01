@@ -2,6 +2,8 @@ type binop = Add | Sub | Mul | Div | Pow
 
 type token = TNum of int | TOp of binop | TLeftParen | TRightParen
 
+type expr = Num of int | Op of expr * binop * expr
+
 (* higher precedence binds stronger *)
 let precedence = function
 | Add | Sub -> 1
@@ -11,8 +13,6 @@ let precedence = function
 let is_right_associative = function
 | Add | Sub | Mul | Div -> false
 | Pow -> true
-
-type expr = Num of int | Op of expr * binop * expr
 
 let rec prefix (tokens : token list) : (expr * token list) option = match tokens with
   [] -> None
@@ -37,7 +37,7 @@ and pratt_loop (precendence_limit : int) (left_expression : expr) (tokens : toke
  | TOp operator :: tokens_after_operator -> 
     let op_precedence = precedence operator in
     let finalized_precedence = 
-      if is_right_associative operator then
+      if is_right_associative operator then (* do not increase precedence limit if operator is right assocc*)
         op_precedence - 1
       else
         op_precedence in
@@ -49,7 +49,7 @@ and pratt_loop (precendence_limit : int) (left_expression : expr) (tokens : toke
     (* -- If it's right associative, we need to decrement the precedence. *)
     if op_precedence > precendence_limit then
       (* we can parse it, spawn a child pratt parser *)
-      match ( pratt finalized_precedence tokens_after_operator ) with
+      match pratt finalized_precedence tokens_after_operator with
       | Some (right_expr, tokens_after_child) ->
         let new_expression = Op (left_expression, operator, right_expr) in
           (* -- There might be more on our level *)
@@ -67,6 +67,24 @@ and pratt_loop (precendence_limit : int) (left_expression : expr) (tokens : toke
       (* Either we ran out of tokens or found something *)
       (* that's not an operator. Let's return what we have. *)
       Some (left_expression, tokens)
+
+(*  *)
+let binaryOp (left : expr) (op : binop) (precedence : int) (tokens_after_op : token list) : (expr * token list) option  =  match pratt precedence tokens_after_op with
+    | None -> None
+    | Some (right, tokens_after_right) -> Some (Op (left, op, right), tokens_after_right)
+
+(*
+    Example: 5++
+    
+    Token expectations:
+    
+        expr Increment
+        ^^^^^^^^^ already parsed
+*)
+(* let postfixIncrement (left : expr) (op: binop) (tokens_after_op : token list) : (expr * token list) option =  *)
+        (* -- We're guaranteed to have parsed the `++` already *)
+        (* -- Nothing to do here! *)
+        (* Some (UnaryOp Increment left, tokens_after_op) *)
 
 let parse tokens = match (pratt 0 tokens) with
   Some (expr, _tokens_after_expression) -> Some expr
