@@ -1,4 +1,28 @@
+(* Option 1: Open the module and give it an alias *)
+open Prattml
+module Pratt = Power_pratt
+
+(* Alternative ways to import the module:
+   Option 2: Direct module alias without opening
+   module Pratt = Prattml.Power_pratt
+
+   Option 3: Open the module under an alias
+   module Pratt = struct include Prattml.Power_pratt end
+   open Pratt
+*)
+
+(* This is a simple implementation of a Pratt parser for arithmetic expressions. *)
+(* It uses the Pratt parsing technique to handle operator precedence and associativity. *)
+
+(* The parser will parse expressions like: 1 + 2 - 3 * 4 + 5 / 6 ^ 7 - 8 * 9 *)
+(* It will also handle parentheses for grouping expressions. *)
+
+(* Now we can use the types and functions from power_pratt.ml *)
+(* Note: You may need to adjust your code to use the imported types/functions *)
+
 type binop = Add | Sub | Mul | Div | Pow
+
+(* Token types *)
 
 type token = TNum of int | TOp of binop | TLeftParen | TRightParen
 
@@ -219,3 +243,5 @@ let () =
 
   print_endline "\nParsed expression:";
   print_expr (parse example_tokens3);
+
+  print_endline Pratt.parse;

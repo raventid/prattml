@@ -1,2 +1,4 @@
 (library
- (name prattml))
+ (name prattml)
+ (public_name prattml)
+ (modules power_pratt))
