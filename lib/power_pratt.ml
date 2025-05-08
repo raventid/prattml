@@ -26,3 +26,16 @@ let rec string_of_token_stream = function
 
 let ts = Cons ('a', [Atom 'b'; Cons ('c', [Atom 'd'; Atom 'e'])])
 let parse = string_of_token_stream ts
+
+(* Example: Represent (+ 1 (* 2 3)) as a token_stream *)
+let example_expression = 
+  Cons ('+', [
+    Atom '1'; 
+    Cons ('*', [
+      Atom '2'; 
+      Atom '3'
+    ])
+  ])
+
+(* Print the expression *)
+let () = print_endline (string_of_token_stream example_expression)
