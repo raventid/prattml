@@ -19,7 +19,9 @@
  (name prattml)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml)
+ (depends
+  ocaml
+  (ounit2 :with-test))
  (tags
   ("add topics" "to describe" your project)))
 

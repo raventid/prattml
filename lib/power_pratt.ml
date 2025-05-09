@@ -4,7 +4,7 @@ the difference is that it uses a power concept and precedence table uses
 
 type binop = Add | Sub | Mul | Div | Pow
 
-type token = Atom of char | Op of char | Eof
+type token = T_Atom of char | T_Op of char | T_Eof
 
 let precedence = function
   | Add | Sub -> (1, 2)
@@ -14,7 +14,7 @@ let precedence = function
 
 
 (* s-expression form to emulate lexing/scanning result *)
-type token_stream = Atom of char | Cons of char * token_stream list
+type s_expression = Atom of char | Cons of char * s_expression list
 
 (* Format token_stream to string representation *)
 let rec string_of_token_stream = function
@@ -27,8 +27,42 @@ let rec string_of_token_stream = function
 let ts = Cons ('a', [Atom 'b'; Cons ('c', [Atom 'd'; Atom 'e'])])
 let parse = string_of_token_stream ts
 
-(* Example: Represent (+ 1 (* 2 3)) as a token_stream *)
-let example_expression = 
+
+let make_token_stream_example1 : token Queue.t = 
+ let q = Queue.create () in
+  Queue.push (T_Atom '1') q;
+  Queue.push (T_Atom '+') q;
+  Queue.push (T_Atom '2') q;
+  Queue.push (T_Atom '*') q;
+  Queue.push (T_Atom '3') q;
+  Queue.push T_Eof q;
+  q
+
+
+(* helper types *)
+exception Break
+
+let expr_bp (token_stream : token Queue.t) : s_expression =  
+  let lhs = match Queue.pop token_stream with
+    | T_Atom(it) -> Atom(it)
+    | _ -> Atom('#') in (* bad token *)
+      try
+        while true do
+          let _ = match Queue.pop token_stream with
+            | T_Eof -> raise Break (* break if end of stream *)
+            | T_Op(it) -> it
+            | _ -> '#' (* bad token *) in
+
+            () (* TODO *)
+        done
+      with
+      | Break -> (); (* return bad token for now, when we see eof *)
+
+      lhs
+
+
+
+let example_s_expression = 
   Cons ('+', [
     Atom '1'; 
     Cons ('*', [
@@ -36,6 +70,3 @@ let example_expression =
       Atom '3'
     ])
   ])
-
-(* Print the expression *)
-let () = print_endline (string_of_token_stream example_expression)
