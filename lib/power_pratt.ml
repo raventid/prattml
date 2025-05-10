@@ -2,16 +2,12 @@
 the difference is that it uses a power concept and precedence table uses
 2 values right and left power, instead of just 1 *)
 
-type binop = Add | Sub | Mul | Div | Pow
-
 type token = T_Atom of char | T_Op of char | T_Eof
 
-let precedence = function
-  | Add | Sub -> (1, 2)
-  | Mul | Div -> (3, 4)
-  | Pow -> (5, 6)
-  
-
+let infix_binding_power (op : char) : (int * int) = match op with
+        | '+' | '-' -> (1, 2)
+        | '*' | '/' -> (3, 4)
+        | _ -> (-1,-1) (* invalid operator *)
 
 (* s-expression form to emulate lexing/scanning result *)
 type s_expression = Atom of char | Cons of char * s_expression list
@@ -48,11 +44,12 @@ let expr_bp (token_stream : token Queue.t) : s_expression =
     | _ -> Atom('#') in (* bad token *)
       try
         while true do
-          let _ = match Queue.pop token_stream with
+          let op = match Queue.pop token_stream with
             | T_Eof -> raise Break (* break if end of stream *)
             | T_Op(it) -> it
             | _ -> '#' (* bad token *) in
 
+            let (_left_bp, _right_bp) = infix_binding_power op in
             () (* TODO *)
         done
       with
