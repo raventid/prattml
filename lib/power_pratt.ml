@@ -38,10 +38,10 @@ let make_token_stream_example1 : token Queue.t =
 (* helper types *)
 exception Break
 
-let expr_bp (token_stream : token Queue.t) : s_expression =  
-  let lhs = match Queue.pop token_stream with
+let rec expr_bp (token_stream : token Queue.t) (precedence_limit : int) : s_expression =  
+  let lhs_ref = ref (match Queue.pop token_stream with
     | T_Atom(it) -> Atom(it)
-    | _ -> Atom('#') in (* bad token *)
+    | _ -> Atom('#')) in (* bad token *)
       try
         while true do
           let op = match Queue.pop token_stream with
@@ -49,14 +49,17 @@ let expr_bp (token_stream : token Queue.t) : s_expression =
             | T_Op(it) -> it
             | _ -> '#' (* bad token *) in
 
-            let (_left_bp, _right_bp) = infix_binding_power op in
-            () (* TODO *)
-        done
+            let (left_bp, right_bp) = infix_binding_power op in
+            if left_bp < precedence_limit then
+              raise Break (* break if precedence is lower than limit *)
+            else
+              let rhs = expr_bp token_stream right_bp in
+              lhs_ref := Cons(op, [!lhs_ref; rhs])
+              (* check if we need to break the loop *)
+        done;
+        !lhs_ref (* Return the final value *)
       with
-      | Break -> (); (* return bad token for now, when we see eof *)
-
-      lhs
-
+      | Break -> !lhs_ref (* return the current value when we break *)
 
 
 let example_s_expression = 

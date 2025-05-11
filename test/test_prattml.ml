@@ -16,7 +16,7 @@ let create_token_queue chars =
 (* Test for expr_bp function with a simple number *)
 let test_expr_bp_simple_number _ =
   let tokens = create_token_queue "1" in
-  let result = expr_bp tokens in
+  let result = expr_bp tokens 0 in
   assert_equal (string_of_token_stream result) "1"
 
 (* Define the test suite *)
