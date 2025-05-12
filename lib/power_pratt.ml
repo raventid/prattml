@@ -8,11 +8,18 @@ let prefix_binding_power (op : char) : (unit * int) = match op with
         | '+' | '-' -> ((), 5)
         | _ -> exit 1 (* invalid operator, just panic and crash the program *)
     
+let postfix_binding_power (op : char) : (int * unit) option = match op with
+        | '!' -> Some (7, ())
+        | _ -> None (* invalid operator, just panic and crash the program *)
+
+(* Infix binding power is a tuple of left and right binding power *)
+(* The left binding power is used to determine when to stop parsing further expressions *)
+(* The right binding power is used to determine the precedence of the current operator *)
 
 let infix_binding_power (op : char) : (int * int) = match op with
         | '+' | '-' -> (1, 2)
         | '*' | '/' -> (3, 4)
-        | '.' -> (8, 7)
+        | '.' -> (10, 9)
         | _ -> exit 1 (* invalid operator, just panic and crash the program *)
 
 (* s-expression form to emulate lexing/scanning result *)
@@ -60,14 +67,22 @@ let rec expr_bp (token_stream : token Queue.t) (minimal_binding_power : int) : s
             | T_Op(it) -> it
             | _ -> raise BadToken (* bad token *) in
 
-            let (left_bp, right_bp) = infix_binding_power op in
-              if left_bp < minimal_binding_power then
+            match postfix_binding_power op with
+            | Some (left_bp, ()) ->
+               if left_bp < minimal_binding_power then
                 raise LeftBindingPowerIsTooWeak (* break if precedence is lower than limit *)
-              else
-                Queue.pop token_stream |> ignore; (* consume the operator token *)
-                (* check if we need to increase precedence limit *)
-                let rhs = expr_bp token_stream right_bp in
-                  lhs_ref := Cons(op, [!lhs_ref; rhs])
+               else
+                Queue.pop token_stream |> ignore; (* consume the postfix operator token *)
+                lhs_ref := Cons(op, [!lhs_ref]);
+            | None -> (* no postfix operator, let's continue with infix operators *)
+                let (left_bp, right_bp) = infix_binding_power op in
+                  if left_bp < minimal_binding_power then
+                    raise LeftBindingPowerIsTooWeak (* break if precedence is lower than limit *)
+                  else
+                    Queue.pop token_stream |> ignore; (* consume the operator token *)
+                    (* check if we need to increase precedence limit *)
+                    let rhs = expr_bp token_stream right_bp in
+                      lhs_ref := Cons(op, [!lhs_ref; rhs]);
         done;
         !lhs_ref (* Return the final value *)
       with
