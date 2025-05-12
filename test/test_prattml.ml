@@ -45,6 +45,16 @@ let test_mixed_operators _ =
   let result = expr "1 + 2 + f . g . h * 3 * 4" in
   assert_equal (string_of_token_stream result) "(+ (+ 1 2) (* (* (. f (. g h)) 3) 4))"
 
+(* Test for unary minus operator with multiplication *)
+let test_unary_minus_with_multiplication _ =
+  let result = expr "--1 * 2" in
+  assert_equal (string_of_token_stream result) "(* (- (- 1)) 2)"
+
+(* Test for unary minus with function composition *)
+let test_unary_minus_with_composition _ =
+  let result = expr "--f . g" in
+  assert_equal (string_of_token_stream result) "(- (- (. f g)))"
+
 (* Define the test suite *)
 let suite =
   "PrattParserTests" >:::
@@ -54,6 +64,8 @@ let suite =
     "test_complex" >:: test_expr_bp_complex;
     "test_function_composition" >:: test_function_composition;
     "test_mixed_operators" >:: test_mixed_operators;
+    "test_unary_minus_with_multiplication" >:: test_unary_minus_with_multiplication;
+    "test_unary_minus_with_composition" >:: test_unary_minus_with_composition;
   ]
 
 (* Run the tests *)

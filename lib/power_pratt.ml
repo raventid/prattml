@@ -4,10 +4,15 @@ the difference is that it uses a power concept and precedence table uses
 
 type token = T_Atom of char | T_Op of char | T_Eof
 
+let prefix_binding_power (op : char) : (unit * int) = match op with 
+        | '+' | '-' -> ((), 5)
+        | _ -> exit 1 (* invalid operator, just panic and crash the program *)
+    
+
 let infix_binding_power (op : char) : (int * int) = match op with
         | '+' | '-' -> (1, 2)
         | '*' | '/' -> (3, 4)
-        | '.' -> (6, 5)
+        | '.' -> (8, 7)
         | _ -> exit 1 (* invalid operator, just panic and crash the program *)
 
 (* s-expression form to emulate lexing/scanning result *)
@@ -44,6 +49,9 @@ exception BadToken
 let rec expr_bp (token_stream : token Queue.t) (minimal_binding_power : int) : s_expression =  
   let lhs_ref = ref (match Queue.pop token_stream with
     | T_Atom(it) -> Atom(it)
+    | T_Op(it) -> let ((), right_bp) = prefix_binding_power it in
+                  let lhs = expr_bp token_stream right_bp in
+                  Cons(it, [lhs])
     | _ -> raise BadToken) in (* bad token *)
       try
         while true do
