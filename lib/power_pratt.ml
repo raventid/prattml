@@ -7,7 +7,8 @@ type token = T_Atom of char | T_Op of char | T_Eof
 let infix_binding_power (op : char) : (int * int) = match op with
         | '+' | '-' -> (1, 2)
         | '*' | '/' -> (3, 4)
-        | _ -> (-1,-1) (* invalid operator *)
+        | '.' -> (6, 5)
+        | _ -> exit 1 (* invalid operator, just panic and crash the program *)
 
 (* s-expression form to emulate lexing/scanning result *)
 type s_expression = Atom of char | Cons of char * s_expression list
