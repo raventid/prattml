@@ -15,11 +15,11 @@ let t2s = function
   | T_Eof -> "EOF"
 
 let prefix_binding_power (op : char) : (unit * int) = match op with 
-        | '+' | '-' -> ((), 5)
+        | '+' | '-' -> ((), 7)
         | _ -> exit 1 (* invalid operator, just panic and crash the program *)
     
 let postfix_binding_power (op : char) : (int * unit) option = match op with
-        | '!' | '[' -> Some (7, ())
+        | '!' | '[' -> Some (9, ())
         | _ -> None (* invalid operator, just panic and crash the program *)
 
 (* Infix binding power is a tuple of left and right binding power *)
@@ -27,9 +27,10 @@ let postfix_binding_power (op : char) : (int * unit) option = match op with
 (* The right binding power is used to determine the precedence of the current operator *)
 
 let infix_binding_power (op : char) : (int * int) option = match op with
-        | '+' | '-' -> Some (1, 2)
-        | '*' | '/' -> Some (3, 4)
-        | '.' -> Some (10, 9)
+        | '?' -> Some (2, 1)
+        | '+' | '-' -> Some (3, 4)
+        | '*' | '/' -> Some (5, 6)
+        | '.' -> Some (12, 11)
         | _ -> None
 
 (* s-expression form to emulate lexing/scanning result *)
@@ -100,9 +101,17 @@ let rec expr_bp (token_stream : token Queue.t) (minimal_binding_power : int) : s
                       raise LeftBindingPowerIsTooWeak (* break if precedence is lower than limit *)
                     else
                       Queue.pop token_stream |> ignore; (* consume the operator token *)
-                      (* check if we need to increase precedence limit *)
-                      let rhs = expr_bp token_stream right_bp in
-                        lhs_ref := Cons(op, [!lhs_ref; rhs]);
+
+                      (* ternary operator *)
+                      if op == '?' then
+                        let mhs = expr_bp token_stream 0 in
+                          Queue.pop token_stream |> ignore; (* consume the ':' token *)
+                          let rhs = expr_bp token_stream right_bp in
+                            lhs_ref := Cons(op, [!lhs_ref; mhs; rhs])
+                      else
+                        (* check if we need to increase precedence limit *)
+                        let rhs = expr_bp token_stream right_bp in
+                          lhs_ref := Cons(op, [!lhs_ref; rhs]);
                 | None -> raise EndOfTokenStream
         done;
         !lhs_ref (* Return the final value *)
