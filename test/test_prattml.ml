@@ -7,7 +7,7 @@ let create_token_queue chars =
   String.iter (fun c -> 
     if c >= '0' && c <= '9' || (c >= 'a' && c <= 'z') then 
       Queue.add (T_Atom c) q
-    else if c = '+' || c = '-' || c = '*' || c = '/' || c = '^' || c = '.' || c = '!' then
+    else if c = '+' || c = '-' || c = '*' || c = '/' || c = '^' || c = '.' || c = '!' || c = '(' || c = ')' || c = '[' || c = ']' then
       Queue.add (T_Op c) q
     else if c != ' ' then (* ignore spaces but handle other chars *)
       failwith ("Unexpected character: " ^ String.make 1 c)
@@ -65,6 +65,16 @@ let test_factorial_with_composition _ =
   let result = expr "f . g !" in
   assert_equal (string_of_token_stream result) "(! (. f g))"
 
+(* Test for nested parentheses *)
+let test_nested_parentheses _ =
+  let result = expr "(((0)))" in
+  assert_equal (string_of_token_stream result) "0"
+
+(* Test for nested index operator *)
+let test_nested_index_operator _ =
+  let result = expr "x[0][1]" in
+  assert_equal (string_of_token_stream result) "([ ([ x 0) 1)"
+
 (* Define the test suite *)
 let suite =
   "PrattParserTests" >:::
@@ -78,6 +88,8 @@ let suite =
     "test_unary_minus_with_composition" >:: test_unary_minus_with_composition;
     "test_unary_minus_with_factorial" >:: test_unary_minus_with_factorial;
     "test_factorial_with_composition" >:: test_factorial_with_composition;
+    "test_nested_parentheses" >:: test_nested_parentheses;
+    "test_nested_index_operator" >:: test_nested_index_operator;
   ]
 
 (* Run the tests *)
