@@ -1,6 +1,11 @@
+(* This implementation is based on the Pratt parsing variation technique *)
+(* described in the article by Matklad: https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html *)
+
 (* This Pratt implementation is similar to the presented in Main,
 the difference is that it uses a power concept and precedence table uses
 2 values right and left power, instead of just 1 *)
+
+(* Also this implementation shows some of the imperative features of Ocaml PL *)
 
 type token = T_Atom of char | T_Op of char | T_Eof
 
