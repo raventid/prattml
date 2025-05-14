@@ -15,11 +15,11 @@ let t2s = function
   | T_Eof -> "EOF"
 
 let prefix_binding_power (op : char) : (unit * int) = match op with 
-        | '+' | '-' -> ((), 7)
+        | '+' | '-' -> ((), 9)
         | _ -> exit 1 (* invalid operator, just panic and crash the program *)
     
 let postfix_binding_power (op : char) : (int * unit) option = match op with
-        | '!' | '[' -> Some (9, ())
+        | '!' | '[' -> Some (11, ())
         | _ -> None (* invalid operator, just panic and crash the program *)
 
 (* Infix binding power is a tuple of left and right binding power *)
@@ -27,10 +27,11 @@ let postfix_binding_power (op : char) : (int * unit) option = match op with
 (* The right binding power is used to determine the precedence of the current operator *)
 
 let infix_binding_power (op : char) : (int * int) option = match op with
-        | '?' -> Some (2, 1)
-        | '+' | '-' -> Some (3, 4)
-        | '*' | '/' -> Some (5, 6)
-        | '.' -> Some (12, 11)
+        | '=' -> Some (2, 1)
+        | '?' -> Some (4, 3)
+        | '+' | '-' -> Some (5, 6)
+        | '*' | '/' -> Some (7, 8)
+        | '.' -> Some (14, 13)
         | _ -> None
 
 (* s-expression form to emulate lexing/scanning result *)

@@ -8,7 +8,7 @@ let create_token_queue chars =
     if c >= '0' && c <= '9' || (c >= 'a' && c <= 'z') then 
       Queue.add (T_Atom c) q
     else if c = '+' || c = '-' || c = '*' || c = '/' || c = '^' || c = '.' || c = '!' || 
-            c = '(' || c = ')' || c = '[' || c = ']' || c = '?' || c = ':' then
+            c = '(' || c = ')' || c = '[' || c = ']' || c = '?' || c = ':' || c = '=' then
       Queue.add (T_Op c) q
     else if c != ' ' && c != '\n' then (* ignore spaces and newlines but handle other chars *)
       failwith ("Unexpected character: " ^ String.make 1 c)
@@ -81,6 +81,11 @@ let test_ternary_operator_nested _ =
   let result = expr "a ? b : c ? d : e" in
   assert_equal (string_of_token_stream result) "(? a b (? c d e))"
 
+(* Test for equality operator with ternary expressions *)
+let test_equality_with_ternary _ =
+  let result = expr "a = 0 ? b : c = d" in
+  assert_equal (string_of_token_stream result) "(= a (= (? 0 b c) d))"
+
 (* Define the test suite *)
 let suite =
   "PrattParserTests" >:::
@@ -97,6 +102,7 @@ let suite =
     "test_nested_parentheses" >:: test_nested_parentheses;
     "test_nested_index_operator" >:: test_nested_index_operator;
     "test_ternary_operator_nested" >:: test_ternary_operator_nested;
+    "test_equality_with_ternary" >:: test_equality_with_ternary;
   ]
 
 (* Run the tests *)
